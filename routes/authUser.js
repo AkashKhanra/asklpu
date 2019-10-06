@@ -69,7 +69,6 @@ router.post('/', async (req, res) => {
                             const data = response.data[0];
                             const salt = await bcrypt.genSalt(10);
                             passw = await bcrypt.hash(passw, salt);
-                            //Image Work Starts
                             const ran_user = randomString.generate({
                                 length: 30,
                             });
