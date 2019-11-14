@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 const Joi = require('joi');
-const config = require('config');
+const {newCommentSchema} = require('../models/newComment');
+const {userSchema} = require('../models/user');
+const uniqueValidator = require('mongoose-unique-validator');
 const Schema = mongoose.Schema;
-const {newCommentSchema} = require('./newComment');
 const newAnswerSchema = new Schema({
     answer: {
         type: String,
@@ -10,44 +11,55 @@ const newAnswerSchema = new Schema({
         minlength: 5,
     },
     posted_by: {
-        type: mongoose.Schema.Types.ObjectID,
-        ref: 'user', //user Schema
-        required: true,
+        type: Schema.Types.ObjectID,
+        ref: 'User',
+        required: true
     },
     post_date: {
         type: Date,
-        default: Date.now(),
+        default: Date.now()
     },
     comments: [{
-        type: newCommentSchema,
+        type: Schema.Types.ObjectID,
+        ref: 'Comment'
     }],
-    likes: {
+    liked_by: [{
+        type: Schema.Types.ObjectID,
+        ref: 'User'
+    }],
+    disliked_by: [{
+        type: Schema.Types.ObjectID,
+        ref: 'User'
+    }],
+    sum_rate: {
         type: Number,
-        default: 0,
-        min: 0,
+        default: 0
     },
-    dislikes: {
+    user_rated: {
         type: Number,
         default: 0,
-        min: 0,
     },
-    rating: {
-        type: Number,
-        default: 0,
-        min: 0,
-        max: 5
+    rated_by: [{
+        type: Schema.Types.ObjectID,
+        ref: 'User'
+    }],
+    question_id: {
+        type: Schema.Types.ObjectID,
+        ref: 'Question',
+        required: true
     }
 });
-
-const newAnswer = mongoose.model('newAnswer', newAnswerSchema, 'answers');
+newAnswerSchema.plugin(uniqueValidator);
+const Answer = mongoose.model('Answer', newAnswerSchema, 'answers');
 
 function validateAnswer(answer) {
     const schema = {
-        answer: Joi.String().min(5).required()
+        question_id: Joi.objectId().required(),
+        answer: Joi.string().min(5).required()
     };
     return Joi.validate(answer, schema);
 }
 
 exports.newAnswerSchema = newAnswerSchema;
-exports.newAnswer = newAnswer;
+exports.Answer = Answer;
 exports.validate = validateAnswer;

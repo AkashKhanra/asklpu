@@ -1,7 +1,5 @@
 const axios = require('axios');
 const bcrypt = require('bcrypt');
-const _ = require('lodash');
-const config = require('config');
 const randomString = require('randomstring');
 const express = require('express');
 const {User, validate,/* validate_server*/} = require('../models/user');
@@ -21,8 +19,7 @@ router.post('/', async (req, res) => {
     if (user) {
         if (user.isActive === false) return res.send(400).send('Sorry user is Not Active please contact Admin for more details.....');
         const validPassword = await bcrypt.compare(req.body.password, user.password);
-        if (!validPassword) return res.send(400).send('Wrong Password... Please Update your  UMS Password');
-        ///need to work....
+        if (!validPassword) return res.status(400).send('Wrong Password... Please Update your  UMS Password');
         const token = user.generateAuthtoken();
         res.send(token);
     } else {
@@ -34,28 +31,25 @@ router.post('/', async (req, res) => {
             }, (error) => {
                 res.status(500).send('Internal Api Error in Reinitialization.......');
             });
-        axios.defaults.headers.post['Content-Type'] = 'application/json';
-        axios.defaults.headers.post['X-Requested-With'] = 'ums.lovely.university';
         const options = {
             headers: {
+                'User-Agent': 'Mozilla/5.0',
+                'Content-Type': 'application/json',
                 'X-Requested-With': 'ums.lovely.university',
                 'Referer': 'http://localhost:8080/',
-                'User-Agent': 'Mozilla/5.0',
-                'Host': 'ums.lpu.in'
+                'Sec-Fetch-Site': 'cross-site',
             }
         };
-        console.log(axios.defaults.headers.post);
         axios.post('https://ums.lpu.in/umswebservice/umswebservice.svc/Testing', {
             UserId: reg_id,
             password: passw,
             Identity: 'aphone',
             DeviceId: 'b5d2f187616d3553',
-            PlayerId: ''
+            PlayerId: 'eRbWwNDk7FQ:APA91bHFbi-o47DsVXwvwoUF6oewl_G-4AE5WZjtgQyztLmt6WYHj16PERtOKKUrxi9AnoNV2j9VMllTzEWG_94VQvttKcjgn_IdK9aijw3anYoZfe6PxYmZhNGOjIOYb1CskB5RAgsc'
         }, options)
             .then((response) => {
-                console.log(response.data);
                 const data = response.data.TestingResult[0];
-                const user_type = data.UserType;
+                let user_type = data.UserType;
                 let role = 'B';
                 if (user_type === 'Student') {
                     role = 'S';
@@ -65,7 +59,6 @@ router.post('/', async (req, res) => {
                     const reg_id = req.body.reg_id;
                     axios.get(`https://ums.lpu.in/umswebservice/umswebservice.svc/StudentBasicInfoForService/${reg_id}/${access_token}/${device_id}`)
                         .then(async (response) => {
-
                             const data = response.data[0];
                             const salt = await bcrypt.genSalt(10);
                             passw = await bcrypt.hash(passw, salt);
@@ -80,7 +73,7 @@ router.post('/', async (req, res) => {
                                     console.log('File Created....');
                                     const gC = new Storage({
                                         projectId: 'asklpu',
-                                        keyFilename: path.join(__dirname, '../config/asklpu-2e0d442a244a.json')
+                                        keyFilename: path.join(__dirname, '../config/asklpu-9bf9759956a9.json')
                                     });
                                     const askLpuProfileImageBucket = gC.bucket('asklpu_profile_images');
                                     let localReadStream = fs.createReadStream(`/Users/apple/WebstormProjects/asklpu/public/images/${ran_user}.jpg`);
@@ -112,7 +105,14 @@ router.post('/', async (req, res) => {
                                 'program_name': data.ProgramName,
                                 'mobile': data.StudentMobile
                             });
-                            await user.save();
+                            await user
+                                .save()
+                                .then(result => {
+                                    console.log('Woho ... Profile Created....');
+                                })
+                                .catch(err => {
+                                    console.log(err);
+                                });
                             axios.get('https://ums.lpu.in//umswebservice/umswebservice.svc/CheckVersion/b5d2f187616d3553')
                                 .then((response) => {
                                     console.log('Reinitialization Complete....');
@@ -125,7 +125,6 @@ router.post('/', async (req, res) => {
                             return res.status(500).send('UMS APi Error...in Fetch');
                         });
                 } else if (user_type === 'Staff') {
-
                     role = 'F';
                     if (data.AccessToken.length === 0) return res.status(400).send('Please Enter Valid UMS User Id and Password....');
                     const access_token = data.AccessToken;
@@ -148,7 +147,7 @@ router.post('/', async (req, res) => {
                                     console.log('File Created....');
                                     const gC = new Storage({
                                         projectId: 'asklpu',
-                                        keyFilename: path.join(__dirname, '../config/asklpu-2e0d442a244a.json')
+                                        keyFilename: path.join(__dirname, '../config/asklpu-9bf9759956a9.json')
                                     });
                                     const askLpuProfileImageBucket = gC.bucket('asklpu_profile_images');
                                     let localReadStream = fs.createReadStream(`/Users/apple/WebstormProjects/asklpu/public/images/${ran_user}.jpg`);
@@ -166,6 +165,7 @@ router.post('/', async (req, res) => {
                                         });
                                 }
 
+
                             });
                             //Image work done.....
                             const user = new User({
@@ -179,7 +179,14 @@ router.post('/', async (req, res) => {
                                 'department': data.DepartmentName,
                                 'program_name': data.ProgramName,
                             });
-                            await user.save();
+                            await user
+                                .save()
+                                .then(result => {
+                                    console.log('Woho ... Profile Created....');
+                                })
+                                .catch(err => {
+                                    console.log(err);
+                                });
                             axios.get('https://ums.lpu.in//umswebservice/umswebservice.svc/CheckVersion/b5d2f187616d3553')
                                 .then((response) => {
                                     console.log('Reinitialization Complete....');
@@ -191,8 +198,6 @@ router.post('/', async (req, res) => {
                         }, (error) => {
                             return res.status(500).send('UMS APi Error...in Fetch');
                         });
-
-
                 } else {
                     res.status(400).send('Contact Admin Support...........')
                 }

@@ -1,7 +1,7 @@
 {
   "name": "AskLpu - Development",
+  "jwtPrivateKey": "asklpu_jwtPrivateKey",
   "google_cloud": {
-    "projectId": "asklpu",
-    "keyFilename": "asklpu-2e0d442a244a.json"
+    "projectId": "asklpu"
   }
 }

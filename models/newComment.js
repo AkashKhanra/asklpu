@@ -1,11 +1,13 @@
 const mongoose = require('mongoose');
 const Joi = require('joi');
-const config = require('config');
+const {userSchema} = require('../models/user');
+// const uniqueValidator = require('mongoose-unique-validator');
 const Schema = mongoose.Schema;
 const newCommentSchema = new Schema({
     posted_by: {
-        type: Schema.Types.ObjectId,
-        ref: 'user'   //refers to user Schema
+        type: Schema.Types.ObjectID,
+        ref: 'User',
+        required: true
     },
     post_date: {
         type: Date,
@@ -16,27 +18,22 @@ const newCommentSchema = new Schema({
         minlength: 5,
         required: true
     },
-    likes: {
-        type: Number,
-        default: 0,
-        min: 0,
-    },
-    dislikes: {
-        type: Number,
-        default: 0,
-        min: 0,
+    answer_id:{
+        type:Schema.Types.ObjectID,
+        ref:'Answer',
+        required:true
     }
 });
-
-const newComment = mongoose.model('newComment', newCommentSchema, 'comments');
+const Comment = mongoose.model('Comment', newCommentSchema, 'comments');
 
 function validateComment(comment) {
     const schema = {
-        actual_comment: Joi.String().min(3).max(1000).required()
+        answer_id: Joi.objectId().required(),
+        comment: Joi.string().min(3).max(1000).required()
     };
     return Joi.validate(comment, schema);
 }
 
-exports.newCommnetSchema = newCommentSchema;
-exports.newCommnet = newComment;
+exports.newCommentSchema = newCommentSchema;
+exports.Comment = Comment;
 exports.validate = validateComment;

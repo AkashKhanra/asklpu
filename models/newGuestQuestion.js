@@ -3,57 +3,52 @@ const Joi = require('joi');
 const Schema = mongoose.Schema;
 const {newAnswerSchema} = require('../models/newAnswer');
 const {userSchema} = require('../models/user');
-// const uniqueValidator = require('mongoose-unique-validator');
-// const AutoIncrement = require('mongoose-sequence')(mongoose);
-
-const newQuestionSchema = new Schema({
-    title: {
+const newGuestSchema = new Schema({
+    gquestion: {
         type: String,
         minlength: 5,
         required: true
     },
-    posted_by: {
-        type: Schema.Types.ObjectID,
-        ref: 'User',
+    guest_email: {
+        type: String,
         required: true
+    },
+    guest_mobile:{
+        type: Number,
+        required:true
     },
     answers: [{
         type: Schema.Types.ObjectID,
-        ref: 'Answer'
+        ref: 'Ganswer'
     }],
     post_date: {
         type: Date,
         default: Date.now()
     },
-    details: {
-        type: String,
-        minlength: 5,
-        required: true
-    },
     viewd_by: [{
         type: Schema.Types.ObjectID,
         ref: 'User'
-
     }],
-    upvote_points:{
-        type: Number,
-        default: 0
-    },
-    voted_by: [{
+    answerd_by:[{
         type: Schema.Types.ObjectID,
-        ref: 'User'
-    }]
+        ref:'User'
+    }],
+   isSolved:{
+        type: Boolean,
+       default: false
+   }
 });
 
-const Question = mongoose.model('Question', newQuestionSchema, 'questions');
+const Gquestion = mongoose.model('Gquestion', newGuestSchema, 'guestQuestions');
 
 function validateQuestion(question) {
     const schema = {
-        title: Joi.string().min(5).required(),
-        details: Joi.string().min(5).required(),
+        quest_email: Joi.string().email({ minDomainAtoms: 2 }),
+        quest_mobile: Joi.number().required(),
+        gquestion: Joi.string().min(5).required()
     };
     return Joi.validate(question, schema);
 }
 
-exports.Question = Question;
+exports.Gquestion = Gquestion;
 exports.validate = validateQuestion;

@@ -2,6 +2,7 @@ const config = require('config');
 const jwt = require('jsonwebtoken');
 const Joi = require('joi');
 const mongoose = require('mongoose');
+var uniqueValidator = require('mongoose-unique-validator');
 const Schema = mongoose.Schema;
 const userSchema = new Schema({
     reg_id: {
@@ -28,7 +29,7 @@ const userSchema = new Schema({
         type: String,
         minlength: 5,
         maxlength: 255,
-        default:'xyz@lpu.co.in'
+        default: 'xyz@lpu.co.in'
     },
     password: {
         type: String,
@@ -74,79 +75,19 @@ const userSchema = new Schema({
     department: {
         type: String,
         default: 'Student'
-    }
+    },
+    posted_questions:[{
+        type: Schema.Types.ObjectID,
+        ref:'Question'
+    }]
 });
-//
-// const staffSchema = new mongoose.Schema({
-//     reg_id: {
-//         type: Number,
-//         minlength: 4,
-//         maxlength: 10,
-//         required: true,
-//         unique: true
-//     },
-//     img: {
-//         type: String
-//     },
-//     name: {
-//         type: String,
-//         required: true,
-//         minlength: 3,
-//         maxlength: 100
-//     },
-//     email: {
-//         type: String,
-//         minlength: 5,
-//         maxlength: 255,
-//         default: 'abc@xyz.com'
-//     },
-//     mobile: {
-//         type: Number,
-//         default: 9999999999,
-//     },
-//     password: {
-//         type: String,
-//         required: true,
-//         minlength: 5,
-//         maxlength: 1024
-//     },
-//     createdAt: {
-//         type: Date,
-//         default: Date.now()
-//     },
-//     role: {
-//         type: String,
-//         minlength: 1,
-//         maxlength: 1,
-//     },
-//     isActive: {type: Boolean, default: true},
-//     access_token: {
-//         type: String,
-//         required: true
-//     },
-//     gender: {
-//         type: String,
-//         default: 'Male'
-//     },
-//     designation: {
-//         type: String
-//     },
-//     department: {
-//         type: String
-//     }
-// });
 
 userSchema.methods.generateAuthtoken = function () {
-    const token = jwt.sign({_id: this._id, role: this.role, reg_id: this.reg_id}, config.get('jwtprivatekey'));
+    const token = jwt.sign({_id:this._id ,reg_id: this.reg_id, role: this.role,}, config.get('jwtPrivateKey'));
     return token;
 };
-// staffSchema.methods.generateAuthtoken = function () {
-//     const token = jwt.sign({_id: this._id, role: this.role, reg_id: this.reg_id}, config.get('jwtprivatekey'));
-//     return token;
-// };
+userSchema.plugin(uniqueValidator);
 const User = mongoose.model('User', userSchema, 'users');
-
-//const UserStaff = mongoose.model('UserStaff', staffSchema, 'users_staff');
 
 function validateUser(user) {
     const schema = {
@@ -170,9 +111,7 @@ function validateUser(user) {
 // }
 
 exports.User = User;
+exports.userSchema = userSchema;
 // exports.UserStaff = UserStaff;
 exports.validate = validateUser;
 //exports.validate_server = validateUserFromServer;
-50
-
-9915088875
